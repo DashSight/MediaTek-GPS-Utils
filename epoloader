@@ -301,8 +301,8 @@ def main():
         resp = send_and_wait(fg, "PMTK740,%s" % time_string, 2, retries=1)
         if resp is None or resp[2] != '3':
             print("ERROR: Unable to set time.")
-            cleanup(fi, fg, args.output_device, previous_baudrate, args.keep_new_speed)
-            return 1
+            #cleanup(fi, fg, args.output_device, previous_baudrate, args.keep_new_speed)
+            #return 1
 
         resp = send_and_wait(fg, "PMTK741,%s,%s" % (args.location_string, time_string), 2, retries=1)
         if resp is None or resp[2] != '3':
