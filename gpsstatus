@@ -1,4 +1,4 @@
-#!/usr/bin/python -uO
+#!/usr/bin/python3 -uO
 
 from collections import defaultdict
 from threading import Thread
@@ -28,7 +28,7 @@ HOURS_PER_WEEK = 168
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
-degree = unichr(0xb0).encode(code)
+degree = chr(0xb0).encode(code)
 
 ex_string = None
 width = 80
@@ -137,11 +137,11 @@ def format_dms(dddmm, direction):
     if len(s) < 3:
         return " " * 17
     return "%3s%s %2s' %05.2f\" %s" % \
-        (s[1], unichr(0xb0).encode(code), s[2], float(s[3]) * 60.0, direction)
+        (s[1], chr(0xb0).encode(code), s[2], float(s[3]) * 60.0, direction)
 
 def format_heading(heading, ref):
     try:
-        return "%3d%s%s" % (math.floor(float(heading)), unichr(0xb0).encode(code), ref)
+        return "%3d%s%s" % (math.floor(float(heading)), chr(0xb0).encode(code), ref)
     except:
         return "     "
 
@@ -155,7 +155,6 @@ def draw_string(win, row, col, st, erase=-1):
         dw.addstr(0, 0, st)
     except:
         pass
-#    print >>sys.stderr, time.time(), "'%s'" % t1, "'%s'" % st
     dw.refresh()
     del dw
     return True
@@ -638,6 +637,6 @@ def main(stds):
 
 if __name__ == "__main__":
     rc = curses.wrapper(main)
-    if ex_string: print >> sys.stderr, ex_string
+    if ex_string: print(ex_string)
     sys.exit(rc)
 
