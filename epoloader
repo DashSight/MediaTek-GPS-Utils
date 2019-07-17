@@ -1,4 +1,4 @@
-#!/usr/bin/python -uO
+#!/usr/bin/python3 -uO
 
 from threading import Thread
 import argparse
@@ -154,7 +154,7 @@ def cleanup(fi, fg, device, previous_baudrate, keep):
         tty.setraw(fg, tty.TCSANOW)
 
     if fg and not keep:
-        print "Resetting NMEA Speed: %d" % previous_baudrate
+        print("Resetting NMEA Speed: %d" % previous_baudrate)
         send_speed(fg, previous_baudrate, 3, 0.057)
         fg.baudrate = previous_baudrate
 
@@ -169,11 +169,11 @@ def get_known_state(device, speed, previous_baudrate, keep):
     fg.flushInput()
     resp = send_and_wait(fg, "PMTK000", 0.5, retries=1)
     if resp and resp[2] == '3':
-        print "GPS and port are now synchronized at %d" % speed
+        print("GPS and port are now synchronized at %d" % speed)
         return fg
 
 #    Make sure the unit is in NMEA mode
-    print "Making sure the unit is in NMEA mode"
+    print("Making sure the unit is in NMEA mode")
     for t in baudrate:
         rate = baudrate[t]
         fg.baudrate = rate
@@ -184,7 +184,7 @@ def get_known_state(device, speed, previous_baudrate, keep):
     time.sleep(0.500)
     tries = 0
     while True:
-        print "Making sure the speeds match"
+        print("Making sure the speeds match")
 
         for t in baudrate:
             fg.baudrate = baudrate[t]
@@ -197,14 +197,14 @@ def get_known_state(device, speed, previous_baudrate, keep):
         # Now try to send a NoOp command
         resp = send_and_wait(fg, "PMTK000", 0.50, retries=1)
         if resp is None or resp[2] != '3':
-            print >> sys.stderr, "The GPS speed and the port speed couldn't be synchronized."
+            print("The GPS speed and the port speed couldn't be synchronized.")
             tries += 1
             if tries < 2:
-                print "Retrying"
+                print("Retrying")
             else:
                 return None
         else:
-            print "GPS and port are now synchronized at %d" % speed
+            print("GPS and port are now synchronized at %d" % speed)
             return fg
 
 def main():
@@ -232,27 +232,27 @@ def main():
             file_size = os.stat(args.input_file).st_size
             fi = io.open(args.input_file, mode="rb")
         except:
-            print sys.exc_info()[1]
+            print(sys.exc_info()[1])
             return 1
 
         header = fi.read(75)
         fi.close()
         if header[0:3] == header[60:63]:
-            print "Opening EPO Type I file"
+            print("Opening EPO Type I file")
             EPO_SET_SIZE = 1920
             SAT_SET_SIZE = 60
             FRAME_LENGTH = 191
         elif header[0:3] == header[72:75]:
-            print "Opening EPO Type II file"
+            print("Opening EPO Type II file")
             EPO_SET_SIZE = 2304
             SAT_SET_SIZE = 72
             FRAME_LENGTH = 227
         else:
-            print >> sys.stderr, "%s is not a valid EPO file." % args.input_file
+            print("%s is not a valid EPO file." % args.input_file)
             return 1
 
         if file_size % EPO_SET_SIZE != 0:
-            print >> sys.stderr, "The size of %s is not an even multiple of EPO_SET_SIZE(%d).  It may be corrupted." % (args.input_file, EPO_SET_SIZE)
+            print("The size of %s is not an even multiple of EPO_SET_SIZE(%d).  It may be corrupted." % (args.input_file, EPO_SET_SIZE))
             return 1
 
         fi = io.open(args.input_file, mode="rb", buffering=0)
@@ -262,13 +262,13 @@ def main():
     o = p.communicate()[0]
     if len(o) > 0:
         lines = o.split('\n')
-        print >> sys.stderr, "ERROR: Device %s is open by PID: %s  PROG: %s  USER: %s" % (args.output_device, lines[0][1:], lines[1][1:], lines[2][1:])
+        print("ERROR: Device %s is open by PID: %s  PROG: %s  USER: %s" % (args.output_device, lines[0][1:], lines[1][1:], lines[2][1:]))
         return 1;
 
     try:
         tfg = os.open(args.output_device, os.O_RDWR)
     except:
-        print sys.exc_info()[1]
+        print(sys.exc_info()[1])
         return 1
 
     params = termios.tcgetattr(tfg);
@@ -276,7 +276,7 @@ def main():
     tty.setraw(tfg, tty.TCSANOW)
     os.close(tfg)
 
-    print "Current port speed: %d" % previous_baudrate
+    print("Current port speed: %d" % previous_baudrate)
 
     if args.no_init:
         fg = serial.Serial(args.output_device, timeout=5, baudrate=args.speed)
@@ -295,24 +295,24 @@ def main():
         else:
             time_string = args.time_string
 
-        print "Setting known values: %s  %s" % (args.location_string, time_string)
+        print("Setting known values: %s  %s" % (args.location_string, time_string))
         resp = send_and_wait(fg, "PMTK740,%s" % time_string, 2, retries=1)
         if resp is None or resp[2] != '3':
-            print >> sys.stderr, "ERROR: Unable to set time."
+            print("ERROR: Unable to set time.")
             cleanup(fi, fg, args.output_device, previous_baudrate, args.keep_new_speed)
             return 1
 
         resp = send_and_wait(fg, "PMTK741,%s,%s" % (args.location_string, time_string), 2, retries=1)
         if resp is None or resp[2] != '3':
-            print >> sys.stderr, "ERROR: Unable to set location."
+            print("ERROR: Unable to set location.")
             cleanup(fi, fg, args.output_device, previous_baudrate, args.keep_new_speed)
             return 1
 
     if args.clear_epo:
-        print "Clearing existing EPO data"
+        print("Clearing existing EPO data")
         resp = send_and_wait(fg, "PMTK127", 2, retries=1)
         if resp is None or resp[2] != '3':
-            print >> sys.stderr, "ERROR: Unable to clear existing EPO data."
+            print("ERROR: Unable to clear existing EPO data.")
             cleanup(fi, fg, args.output_device, previous_baudrate, args.keep_new_speed)
             return 1
 
@@ -320,7 +320,7 @@ def main():
         cleanup(fi, fg, args.output_device, previous_baudrate, args.keep_new_speed)
         return 0
 
-    print "Setting binary mode, speed: %d" % args.speed
+    print("Setting binary mode, speed: %d" % args.speed)
     send_string(fg, "PMTK253,1,%d" % args.speed)
     time.sleep(0.500)
 
@@ -329,7 +329,7 @@ def main():
     failed = False
     epo_sets = 0
 
-    print "Sending %d EPO sets" % (file_size / EPO_SET_SIZE)
+    print("Sending %d EPO sets" % (file_size / EPO_SET_SIZE))
     while total_read < file_size:
         for lseq in range(11):
             buf = bytearray('\0' * FRAME_LENGTH)
@@ -349,7 +349,7 @@ def main():
             if lseq == 0:
                 epo_sets += 1
                 set_start_time = struct.unpack("<I", red[0:3] + '\0')[0]
-                print "Sending set %4d.  Valid from %s UTC" % (epo_sets, Convert2UTC(set_start_time))
+                print("Sending set %4d.  Valid from %s UTC" % (epo_sets, Convert2UTC(set_start_time)))
                 if seq == 0:
                     start = set_start_time
 
@@ -379,11 +379,11 @@ def main():
         fg.flush()
         seq, result = getResponse(fg, 2)
         if result != 1:
-            print >> sys.stderr, "Final Transfer failed"
+            print("Final Transfer failed")
         else:
-            print "%4d sets sent.  Valid from %s to %s UTC" % (epo_sets,
+            print("%4d sets sent.  Valid from %s to %s UTC" % (epo_sets,
             Convert2UTC(start),
-            Convert2UTC(end + 6))
+            Convert2UTC(end + 6)))
 
     set_nmea(fg, args.speed)
     getResponse(fg, 1)
@@ -393,17 +393,17 @@ def main():
     cleanup(fi, fg, args.output_device, previous_baudrate, args.keep_new_speed)
 
     if resp is None:
-        print >> sys.stderr, "ERROR: EPO in NVRAM couldn't be verified"
+        print("ERROR: EPO in NVRAM couldn't be verified")
         return 1
 
     vstart = (int(resp[2]) * 168 + int(resp[3]) / 3600)
     vend = (int(resp[4]) * 168 + int(resp[5]) / 3600)
     if vstart == start and vend == end:
-        print "Verified EPO in NVRAM matches file"
+        print("Verified EPO in NVRAM matches file")
         return 0
     else:
-        print >> sys.stderr, "ERROR: EPO in NVRAM doesnt match file"
-        print >> sys.stderr, "  In NVRAM: %s to %s UTC" % (Convert2UTC(vstart), Convert2UTC(vend))
+        print("ERROR: EPO in NVRAM doesnt match file")
+        print("  In NVRAM: %s to %s UTC" % (Convert2UTC(vstart), Convert2UTC(vend)))
         return 1
 
 if __name__ == "__main__":
