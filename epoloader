@@ -56,25 +56,25 @@ def getResponse(fg, command):
         if len(b) == 0:
             break
 
-        if b != '\x04':
+        if b != b'\x04':
             continue
 
         b = fg.read(1)
-        if b != '\x24':
+        if b != b'\x24':
             continue
 
         length, cmd = struct.unpack("<HH", fg.read(4))
 
         if cmd == command:
-            return struct.unpack("<HBBH", fg.read(6))[0:2]
+            return struct.unpack(b"<HBBH", fg.read(6))[0:2]
         else:
-            struct.unpack("<%dBBH" % (length - 9), fg.read(length - 6))
+            struct.unpack(b"<%dBBH" % (length - 9), fg.read(length - 6))
 
         limit += 1
         if limit > 10:
             break
 
-    return (-1, -1, -1, -1)
+    return (-1, -1)
 
 class rx_loop_thread(Thread):
     def __init__(self, fg, r):
@@ -94,14 +94,15 @@ class rx_loop_thread(Thread):
         self.fg.flushInput()
         while True:
             try:
-                for line in self.fg:
-                    if self.killme: return
-                    if len(line) < 3:
-                        continue
-                    spl = line.strip()[1:-3].split(',')
-                    if spl[0] == self.r:
-                        self.result = spl
-                        return
+                for lines in self.fg:
+                    for line in str(lines, 'utf-8').splitlines():
+                        if self.killme: return
+                        if len(line) < 3:
+                            continue
+                        spl = line.strip()[1:-3].split(',')
+                        if spl[0] == self.r:
+                            self.result = spl
+                            return
             except:
                 pass
 
@@ -124,15 +125,16 @@ def send_and_wait(fg, string, timeout, r="PMTK001", retries=0):
 
 
 def send_string(fg, string):
-    fg.write("$%s*%02x\r\n" % (string, crc8(string)))
+    send_str = "$%s*%02x\r\n" % (string, crc8(string.encode()))
+    fg.write(send_str.encode())
     fg.flush()
 
 def send_speed(fg, speed, count, delay):
     speed_string = "PMTK251,%d" % speed
-    send_string = "$%s*%02x\r\n" % (speed_string, crc8(speed_string))
+    send_string = "$%s*%02x\r\n" % (speed_string, crc8(speed_string.encode()))
     i = iter(range(count, -1, -1))
     while next(i):
-        fg.write(send_string)
+        fg.write(send_string.encode())
         fg.flush()
         time.sleep(delay)
 
@@ -143,7 +145,7 @@ def convert_arg_line_to_args(arg_line):
         yield arg
 
 def set_nmea(fg, rate):
-    buf = bytearray('\0' * 14)
+    buf = bytearray(b'\0' * 14)
     struct.pack_into("<HHHBIBH", buf, 0, PREAMBLE, 14, UART_CMD, 0, rate, 0, EOW)
     struct.pack_into("B", buf, 11, crc8(buf[2:11]))
     fg.write(buf)
@@ -332,7 +334,7 @@ def main():
     print("Sending %d EPO sets" % (file_size / EPO_SET_SIZE))
     while total_read < file_size:
         for lseq in range(11):
-            buf = bytearray('\0' * FRAME_LENGTH)
+            buf = bytearray(b'\0' * FRAME_LENGTH)
             struct.pack_into("<HHHH", buf, 0, PREAMBLE, FRAME_LENGTH, EPO_CMD, seq)
             data_start = 8
             if lseq == 10:
@@ -348,7 +350,7 @@ def main():
 
             if lseq == 0:
                 epo_sets += 1
-                set_start_time = struct.unpack("<I", red[0:3] + '\0')[0]
+                set_start_time = struct.unpack("<I", red[0:3] + b'\0')[0]
                 print("Sending set %4d.  Valid from %s UTC" % (epo_sets, Convert2UTC(set_start_time)))
                 if seq == 0:
                     start = set_start_time
@@ -358,11 +360,11 @@ def main():
             rseq, result = getResponse(fg, 2)
             if result != 1:
                 failed = True
-                print >> sys.stderr, "Transfer failed"
+                print("Transfer failed")
                 break
             if seq != rseq:
                 failed = True
-                print >> sys.stderr, "Sequence error: %d != %d" % (seq, result)
+                print("Sequence error: %d != %d" % (seq, result))
                 break
             seq += 1
 
@@ -372,9 +374,9 @@ def main():
     fi.close()
     if not failed:
         end = set_start_time
-        buf = bytearray('\0' * FRAME_LENGTH)
-        struct.pack_into("<HHHH", buf, 0, PREAMBLE, FRAME_LENGTH, EPO_CMD, 0xffff)
-        struct.pack_into("<BH", buf, FRAME_LENGTH - 3, crc8(buf[2: FRAME_LENGTH - 3]), EOW)
+        buf = bytearray(b'\0' * FRAME_LENGTH)
+        struct.pack_into(b"<HHHH", buf, 0, PREAMBLE, FRAME_LENGTH, EPO_CMD, 0xffff)
+        struct.pack_into(b"<BH", buf, FRAME_LENGTH - 3, crc8(buf[2: FRAME_LENGTH - 3]), EOW)
         fg.write(buf)
         fg.flush()
         seq, result = getResponse(fg, 2)
