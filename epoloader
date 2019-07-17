@@ -9,7 +9,7 @@ import subprocess
 import sys
 import termios
 import time
-import tty
+import term
 
 import serial
 
@@ -153,7 +153,7 @@ def set_nmea(fg, rate):
 
 def cleanup(fi, fg, device, previous_baudrate, keep):
     if fg:
-        tty.setraw(fg, tty.TCSANOW)
+        term.setraw(fg, term.TCSANOW)
 
     if fg and not keep:
         print("Resetting NMEA Speed: %d" % previous_baudrate)
@@ -167,7 +167,7 @@ def cleanup(fi, fg, device, previous_baudrate, keep):
 
 def get_known_state(device, speed, previous_baudrate, keep):
     fg = serial.Serial(port=device, timeout=5, baudrate=speed)
-    tty.setraw(fg, tty.TCSANOW)
+    term.setraw(fg, term.TCSANOW)
     fg.flushInput()
     resp = send_and_wait(fg, "PMTK000", 0.5, retries=1)
     if resp and resp[2] == '3':
@@ -275,7 +275,7 @@ def main():
 
     params = termios.tcgetattr(tfg);
     previous_baudrate = baudrate[params[5]];
-    tty.setraw(tfg, tty.TCSANOW)
+    term.setraw(tfg, term.TCSANOW)
     os.close(tfg)
 
     print("Current port speed: %d" % previous_baudrate)
