@@ -1,4 +1,14 @@
-## Tools for MT3339/PA6H Based GPS
+# MediaTek GPS Utils
+
+This is a Python3 implementation that allows writing the MediaTek EPO data to MediaTek MT3333 and MT3339 based devices. It possibly supports other MediaTek devices as well.
+
+## MediaTek EPO
+
+EPO (Extended Prediction Orbit) is one of MediaTek innovations, an off-line server base Assisted-GNSS (A-GNSS) solution which can improve TTFF significantly.
+
+EPO allows a faster TTFF (similar to the cellar AGPS) but without requiring a cellar connection. It seems that an internet connection is enough to use EPO.
+
+## Detailed Explanation (from original project)
 
 It may seem slightly counter-intuitive, but in order for a GPS unit to produce an accurate fix,
 it has to know the time, the location of the GPS satellites, and it's own rough location.
@@ -27,7 +37,7 @@ There are other sources for EPO data, including directly from MediaTek, but ther
 EPO and EPO-II. The MT3339 in this applications needs the original EPO format and can handle
 only 7 or 14 day files. That's what's on the GlobalTop site.
 
-So now what?  Use the tools...
+## Using the tools
 
 ### Get the EPO file:
 
@@ -337,5 +347,3 @@ you and writes the result to the GPS device.
 gpsstatus <gps_device>
 ```	
 This shell script just displays the output of the GPS unit and calculates the time to first fix.
-
-
