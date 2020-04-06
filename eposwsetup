@@ -291,7 +291,7 @@ def main():
     fg.flush()
 
     resp = fg.readline()
-    if resp is None or resp[2] != '3':
+    if resp is None or resp[7] != 67:
         print("ERROR: Unable to reset to factory settings.")
         print(resp)
 
@@ -301,7 +301,7 @@ def main():
     fg.flush()
 
     resp = fg.readline()
-    if resp is None or resp[2] != '3':
+    if resp is None or resp[7] != 67:
         print("ERROR: Unable to set 5Hz update.")
         print(resp)
 
@@ -311,7 +311,7 @@ def main():
     fg.flush()
 
     resp = fg.readline()
-    if resp is None or resp[2] != '3':
+    if resp is None or resp[7] != 67:
         print("ERROR: Unable to set to aviation mode.")
         print(resp)
 
